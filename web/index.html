@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediBook — Hospital Appointment Booking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="logo" id="logo-link">
+        <span class="logo-icon" aria-hidden="true">+</span>
+        <span>MediBook</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button type="button" class="nav-link nav-auth" data-nav="home">Home</button>
+        <button type="button" class="nav-link nav-auth" data-nav="book">Book Appointment</button>
+        <button type="button" class="nav-link nav-auth" data-nav="appointments">My Appointments</button>
+        <button type="button" class="nav-link nav-auth" data-nav="about">About Project</button>
+        <button type="button" class="nav-link nav-guest active" data-nav="login">Login</button>
+        <button type="button" class="nav-link nav-guest" data-nav="register">Register</button>
+      </nav>
+      <span id="live-sync-badge" class="live-badge hidden" title="Real-time updates">● Live</span>
+      <div id="header-user" class="header-user hidden">
+        <span id="user-greeting"></span>
+        <button type="button" id="btn-logout" class="btn btn-ghost btn-sm">Logout</button>
+      </div>
+      <button type="button" class="menu-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-home" class="view auth-only-view">
+      <div class="hero">
+        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="container hero-content">
+          <p class="eyebrow">Hospital Appointment Booking System</p>
+          <h1>Quality care starts with <em>one simple booking</em></h1>
+          <p class="hero-lead">
+            Register, log in, and book hourly slots with specialists. Confirmations are sent to your email and mobile.
+          </p>
+          <div class="hero-actions">
+            <button type="button" class="btn btn-primary" id="hero-book-btn">Book an appointment</button>
+            <button type="button" class="btn btn-ghost" data-nav="register">Create account</button>
+          </div>
+          <ul class="hero-stats">
+            <li><strong>12+</strong><span>Specialists</span></li>
+            <li><strong>8</strong><span>Hourly slots / day</span></li>
+            <li><strong>SMS + Email</strong><span>Confirmations</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="container section-pad">
+        <h2 class="section-title">Our doctors</h2>
+        <p class="section-sub">Fixed one-hour slots from 9 AM to 5 PM (lunch break 1–2 PM).</p>
+        <div id="doctor-cards-preview" class="doctor-grid"></div>
+      </div>
+    </section>
+
+    <section id="view-login" class="view active">
+      <div class="container section-pad narrow">
+        <h2 class="section-title">Login</h2>
+        <p class="section-sub">You must login or register before accessing any other page.</p>
+        <form id="login-form" class="booking-form auth-form">
+          <div class="form-row">
+            <label for="login-email">Email</label>
+            <input id="login-email" name="email" type="email" required autocomplete="email" placeholder="you@email.com" />
+          </div>
+          <div class="form-row">
+            <label for="login-password">Password</label>
+            <input id="login-password" name="password" type="password" required autocomplete="current-password" placeholder="Your password" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Login</button>
+          <p class="form-message" id="login-message"></p>
+          <p class="auth-switch">No account? <button type="button" class="link-btn" data-nav="register">Register here</button></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="view-register" class="view">
+      <div class="container section-pad narrow">
+        <h2 class="section-title">Register</h2>
+        <p class="section-sub">Create an account. Booking confirmations go to your email and phone.</p>
+        <form id="register-form" class="booking-form auth-form">
+          <div class="form-row">
+            <label for="reg-name">Full name</label>
+            <input id="reg-name" name="name" type="text" required autocomplete="name" placeholder="Your full name" />
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="reg-email">Email</label>
+              <input id="reg-email" name="email" type="email" required autocomplete="email" placeholder="you@email.com" />
+            </div>
+            <div>
+              <label for="reg-phone">Mobile (10 digits)</label>
+              <input id="reg-phone" name="phone" type="tel" required pattern="[0-9]{10}" maxlength="10" placeholder="9876543210" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="reg-password">Password (min 6 characters)</label>
+            <input id="reg-password" name="password" type="password" required minlength="6" autocomplete="new-password" placeholder="Create a password" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Create account</button>
+          <p class="form-message" id="register-message"></p>
+          <p class="auth-switch">Already registered? <button type="button" class="link-btn" data-nav="login">Login here</button></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="view-book" class="view auth-only-view">
+      <div class="container section-pad narrow">
+        <h2 class="section-title">Book an appointment</h2>
+        <p class="section-sub">Logged in as <strong id="book-user-name"></strong> — confirmations to your registered email and phone.</p>
+        <form id="booking-form" class="booking-form">
+          <div class="form-row">
+            <label for="doctor-select">Select doctor</label>
+            <select id="doctor-select" name="doctor" required>
+              <option value="">Choose a specialist…</option>
+            </select>
+            <p id="doctor-availability-info" class="doctor-avail-info hidden" aria-live="polite"></p>
+          </div>
+          <div class="form-row">
+            <label for="appointment-date">Appointment date</label>
+            <input id="appointment-date" name="date" type="date" required />
+            <p id="date-availability-hint" class="date-hint hidden"></p>
+          </div>
+          <div class="form-row">
+            <label>Available hourly slots</label>
+            <p class="slot-hint">Up to <strong>3 patients</strong> per hour · Green = open · Amber = filling · Grey = full</p>
+            <div id="slot-grid" class="slot-grid">
+              <p class="slot-placeholder">Select a doctor and date to see slots.</p>
+            </div>
+            <input type="hidden" id="selected-slot" name="time" required />
+          </div>
+          <div id="queue-live-panel" class="queue-live-panel hidden">
+            <h4>Live queue <span class="live-pulse"></span></h4>
+            <ul id="queue-live-list"></ul>
+          </div>
+          <div id="suggestions-panel" class="suggestions-panel hidden">
+            <h4>Slot not available — try these:</h4>
+            <ul id="suggestions-list"></ul>
+          </div>
+          <div class="form-row">
+            <label for="reason">Reason for visit (optional)</label>
+            <textarea id="reason" name="reason" rows="3" placeholder="Brief description"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-confirm-booking" disabled>Confirm booking</button>
+          <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="view-appointments" class="view auth-only-view">
+      <div class="container section-pad">
+        <h2 class="section-title">My appointments</h2>
+        <p class="section-sub">Confirmation was sent to your registered email and phone for each booking.</p>
+        <div id="appointments-list" class="appointments-list"></div>
+        <p id="empty-appointments" class="empty-state hidden">No appointments yet. <button type="button" class="link-btn" data-nav="book">Book your first visit</button></p>
+      </div>
+    </section>
+
+    <section id="view-about" class="view auth-only-view">
+      <div class="container section-pad">
+        <h2 class="section-title">About this project</h2>
+        <div class="about-grid">
+          <article class="about-card">
+            <h3>Project overview</h3>
+            <p>
+              <strong>Hospital Appointment Booking System using GitHub and Docker</strong>
+              — a DevOps project with user registration, hourly slot booking, and email/SMS confirmations.
+            </p>
+          </article>
+          <article class="about-card">
+            <h3>Features</h3>
+            <ul>
+              <li>Login and registration</li>
+              <li>Fixed hourly slots with live availability</li>
+              <li>Suggested slots when your choice is taken</li>
+              <li>Email and SMS booking confirmation</li>
+              <li>Docker deployment and Jenkins CI/CD</li>
+            </ul>
+          </article>
+          <article class="about-card">
+            <h3>Tech stack</h3>
+            <ul class="tech-tags">
+              <li>HTML / CSS / JavaScript</li>
+              <li>Node.js API</li>
+              <li>SQLite</li>
+              <li>Docker</li>
+              <li>Jenkins</li>
+            </ul>
+          </article>
+          <article class="about-card">
+            <h3>Team</h3>
+            <ul class="team-list">
+              <li><span>Poornima Devangamath</span> <a href="mailto:2023cs_poornimadevangamath_c@nie.ac.in">2023cs_poornimadevangamath_c@nie.ac.in</a></li>
+              <li><span>Sakshi Rajesh Naik</span> <a href="mailto:2023cs_sakshirajeshnaik_c@nie.ac.in">2023cs_sakshirajeshnaik_c@nie.ac.in</a></li>
+            </ul>
+            <p class="guide">Guide: <strong>Mohammed Adnan</strong> — NIE Mysuru</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>MediBook &copy; 2026 — NIE Mysuru</p>
+      <p class="footer-meta">Docker &bull; Jenkins &bull; Email &amp; SMS confirmations</p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast hidden" role="alert"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

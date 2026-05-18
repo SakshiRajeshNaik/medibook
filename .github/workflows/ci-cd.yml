@@ -1,0 +1,35 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate project structure
+        run: |
+          test -f backend/src/server.js
+          test -f frontend/src/App.jsx
+          test -f docker-compose.yml
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Start services
+        run: |
+          docker compose up -d
+          sleep 20
+          docker compose exec -T api node src/scripts/seed.js || true
+
+      - name: Health check
+        run: curl -f http://localhost:8080/api/health
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
