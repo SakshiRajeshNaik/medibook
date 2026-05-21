@@ -6,13 +6,8 @@ on:
   pull_request:
     branches: [main, master]
 
-env:
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  IMAGE_API: ${{ secrets.DOCKER_USERNAME }}/medibook-api
-  IMAGE_FRONTEND: ${{ secrets.DOCKER_USERNAME }}/medibook-frontend
-
 jobs:
-  # ── 1. Build & Test ──────────────────────────────────────────────────────────
+  # ── Build & Health Check ─────────────────────────────────────────────────────
   build:
     name: Build & Health Check
     runs-on: ubuntu-latest
@@ -45,96 +40,21 @@ jobs:
         if: always()
         run: docker compose down -v
 
-  # ── 2. Push to Docker Hub ────────────────────────────────────────────────────
-  push:
-    name: Push Images to Docker Hub
+  # ── Deploy via Render (auto on push to main) ─────────────────────────────────
+  deploy:
+    name: Trigger Render Deploy
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build & Push API image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: |
-            ${{ env.IMAGE_API }}:latest
-            ${{ env.IMAGE_API }}:${{ github.sha }}
-
-      - name: Build & Push Frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          build-args: |
-            VITE_API_URL=/api
-          tags: |
-            ${{ env.IMAGE_FRONTEND }}:latest
-            ${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
-
-      - name: Image digest summary
+      - name: Deploy Backend to Render
         run: |
-          echo "✅ API image pushed: ${{ env.IMAGE_API }}:latest"
-          echo "✅ Frontend image pushed: ${{ env.IMAGE_FRONTEND }}:latest"
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_API }}" \
+            -H "Content-Type: application/json" \
+            | echo "✅ Backend deploy triggered"
 
-  # ── 3. Deploy to Kubernetes ──────────────────────────────────────────────────
-  deploy:
-    name: Deploy to Kubernetes
-    runs-on: ubuntu-latest
-    needs: push
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: latest
-
-      - name: Configure kubectl
+      - name: Deploy Frontend to Render
         run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-
-      - name: Replace image names in manifests
-        run: |
-          sed -i "s|DOCKERHUB_USERNAME|${{ secrets.DOCKER_USERNAME }}|g" k8s/api-deployment.yaml
-          sed -i "s|DOCKERHUB_USERNAME|${{ secrets.DOCKER_USERNAME }}|g" k8s/frontend-deployment.yaml
-
-      - name: Apply Kubernetes manifests
-        run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/secret.yaml
-          kubectl apply -f k8s/nginx-deployment.yaml
-          kubectl apply -f k8s/api-deployment.yaml
-          kubectl apply -f k8s/frontend-deployment.yaml
-
-      - name: Update images to latest
-        run: |
-          kubectl set image deployment/medibook-api api=${{ env.IMAGE_API }}:${{ github.sha }} -n medibook
-          kubectl set image deployment/medibook-frontend frontend=${{ env.IMAGE_FRONTEND }}:${{ github.sha }} -n medibook
-
-      - name: Wait for rollout
-        run: |
-          kubectl rollout status deployment/medibook-api -n medibook --timeout=120s
-          kubectl rollout status deployment/medibook-frontend -n medibook --timeout=120s
-          kubectl rollout status deployment/medibook-nginx -n medibook --timeout=60s
-
-      - name: Deployment summary
-        run: |
-          echo "✅ Deployment complete"
-          kubectl get pods -n medibook
-          kubectl get services -n medibook
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}" \
+            -H "Content-Type: application/json" \
+            | echo "✅ Frontend deploy triggered"
