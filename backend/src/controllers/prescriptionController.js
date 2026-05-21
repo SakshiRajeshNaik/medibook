@@ -50,15 +50,40 @@ exports.getPrescription = catchAsync(async (req, res, next) => {
 });
 
 exports.downloadPdf = catchAsync(async (req, res, next) => {
-  const prescription = await Prescription.findById(req.params.id);
+  // Support token via query param for direct browser <a href> links
+  const jwt = require("jsonwebtoken");
+  const env = require("../config/env");
+
+  let userId = req.user?._id;
+  if (!userId) {
+    const token = req.query.token;
+    if (!token) return next(new AppError("Authentication required", 401));
+    try {
+      const decoded = jwt.verify(token, env.jwtSecret);
+      userId = decoded.id;
+    } catch {
+      return next(new AppError("Invalid or expired token", 401));
+    }
+  }
+
+  const prescription = await Prescription.findById(req.params.id)
+    .populate("patient", "name email phone")
+    .populate("doctor", "name email");
   if (!prescription) return next(new AppError("Not found", 404));
 
-  const patient = await User.findById(prescription.patient);
-  const doctor = await User.findById(prescription.doctor);
-  const pdf = await pdfService.generatePrescriptionPdf(prescription, patient, doctor);
+  const uid = userId.toString();
+  if (
+    prescription.patient._id.toString() !== uid &&
+    prescription.doctor._id.toString() !== uid &&
+    req.user?.role !== "admin"
+  ) {
+    return next(new AppError("Not authorized", 403));
+  }
+
+  const pdf = await pdfService.generatePrescriptionPdf(prescription, prescription.patient, prescription.doctor);
 
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `attachment; filename=prescription-${prescription._id}.pdf`);
+  res.setHeader("Content-Disposition", `inline; filename=prescription-${prescription._id}.pdf`);
   res.send(pdf);
 });
 

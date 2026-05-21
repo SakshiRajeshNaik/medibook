@@ -35,7 +35,7 @@ export default function VideoConsult() {
           Open in new tab
         </a>
       </div>
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-900 shadow-glow">
+      <div className="overflow-hidden rounded-3xl border border-surface-200 bg-primary-50 shadow-card">
         <iframe
           title="Video consultation"
           src={room.jitsiUrl}

@@ -26,7 +26,7 @@ exports.createCheckout = catchAsync(async (req, res, next) => {
   appointment.paymentId = result.paymentId;
   await appointment.save();
 
-  res.json({ success: true, ...result });
+  res.json({ success: true, ...result, amount: appointment.amount });
 });
 
 exports.confirmMockPayment = catchAsync(async (req, res, next) => {

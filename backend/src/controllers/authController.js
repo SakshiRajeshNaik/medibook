@@ -27,42 +27,38 @@ exports.register = catchAsync(async (req, res, next) => {
   if (!name || !email || !phone || !password) {
     return next(new AppError("All fields are required", 400));
   }
-  const allowedRole = role === "doctor" ? "doctor" : "patient";
+  // Public registration is for patients only; doctors are created by admin
+  const allowedRole = "patient";
   const existing = await User.findOne({ email });
   if (existing) return next(new AppError("Email already registered", 400));
 
-  const user = await User.create({ name, email, phone, password, role: allowedRole });
+  const user = await User.create({
+    name,
+    email: email.toLowerCase().trim(),
+    phone,
+    password,
+    role: allowedRole,
+  });
 
-  if (allowedRole === "doctor") {
-    const { specialization, department, qualification, experienceYears, bio, consultationFee } =
-      req.body;
-    await DoctorProfile.create({
-      user: user._id,
-      specialization: specialization || "General Medicine",
-      department: department || "General",
-      qualification: qualification || "",
-      experienceYears: experienceYears || 0,
-      bio: bio || "",
-      consultationFee: consultationFee || env.consultationFee,
-      schedule: [
-        { dayOfWeek: 1, startTime: "09:00", endTime: "12:00", slotDurationMinutes: 60 },
-        { dayOfWeek: 1, startTime: "14:00", endTime: "17:00", slotDurationMinutes: 60 },
-        { dayOfWeek: 3, startTime: "09:00", endTime: "12:00", slotDurationMinutes: 60 },
-        { dayOfWeek: 5, startTime: "09:00", endTime: "12:00", slotDurationMinutes: 60 },
-      ],
-    });
-  }
-
-  sendAuthResponse(user, res, 201);
+  res.status(201).json({
+    success: true,
+    message: "Registration successful. Please sign in with your email and password.",
+  });
 });
 
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) return next(new AppError("Email and password required", 400));
 
-  const user = await User.findOne({ email }).select("+password");
-  if (!user || !(await user.comparePassword(password))) {
-    return next(new AppError("Invalid email or password", 401));
+  const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password");
+  if (!user) {
+    return next(new AppError("User not found. Please register first.", 404));
+  }
+  if (!(await user.comparePassword(password))) {
+    return next(new AppError("Incorrect password", 401));
+  }
+  if (!user.isActive) {
+    return next(new AppError("Account is deactivated", 403));
   }
   sendAuthResponse(user, res);
 });

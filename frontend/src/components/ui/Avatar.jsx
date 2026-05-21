@@ -7,7 +7,7 @@ export default function Avatar({ name, size = "md", className = "" }) {
   };
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-600 font-bold text-white shadow-soft ${sizes[size]} ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-2xl bg-primary-500 font-semibold text-white shadow-soft ${sizes[size]} ${className}`}
       aria-hidden
     >
       {initial}

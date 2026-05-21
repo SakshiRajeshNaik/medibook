@@ -22,13 +22,15 @@ exports.createNotification = async (userId, title, message, type = "info", meta 
 
 exports.notifySlotUpdate = (doctorId, date) => {
   if (io) {
-    io.emit("slots_updated", { doctorId, date });
+    const payload = { doctorId: doctorId.toString(), date };
+    io.to(`slots:${doctorId}:${date}`).emit("slots_updated", payload);
+    io.emit("slots_updated", payload);
   }
 };
 
 exports.notifyAppointmentsUpdate = (userId) => {
   if (io) {
-    io.to(`user:${userId}`).emit("appointments_updated");
+    if (userId) io.to(`user:${userId}`).emit("appointments_updated");
     io.emit("appointments_updated");
   }
 };
@@ -36,5 +38,11 @@ exports.notifyAppointmentsUpdate = (userId) => {
 exports.notifyQueueUpdate = (doctorId, date, time) => {
   if (io) {
     io.emit("queue_updated", { doctorId, date, time });
+  }
+};
+
+exports.notifySlotTimingUpdate = (userId, payload) => {
+  if (io) {
+    io.to(`user:${userId}`).emit("slot_timing_updated", payload);
   }
 };

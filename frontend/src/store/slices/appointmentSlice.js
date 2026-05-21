@@ -11,7 +11,7 @@ export const bookAppointment = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const { data } = await api.post("/appointments", payload);
-      return data.appointment;
+      return { ...data.appointment, confirmationMessage: data.confirmationMessage };
     } catch (err) {
       return rejectWithValue(err.response?.data);
     }

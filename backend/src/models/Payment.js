@@ -10,6 +10,8 @@ const paymentSchema = new mongoose.Schema(
     stripeSessionId: { type: String, default: "" },
     stripePaymentIntentId: { type: String, default: "" },
     mockPayment: { type: Boolean, default: false },
+    refundAmount: { type: Number, default: 0 },
+    cancellationFee: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

@@ -30,13 +30,13 @@ export default function DoctorDetail() {
   return (
     <div className="page-shell max-w-3xl">
       <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-card">
-        <div className="h-32 bg-gradient-to-r from-primary-600 via-sky-500 to-accent-500" />
+        <div className="h-32 bg-gradient-to-r from-primary-100 via-primary-50 to-accent-100" />
         <div className="relative px-6 pb-8 sm:px-10">
           <div className="-mt-14 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-end">
               <Avatar name={doc.user.name} size="lg" className="ring-4 ring-white shadow-card" />
               <div className="text-center sm:mb-1 sm:pb-2 sm:text-left">
-                <h1 className="text-2xl font-bold text-brand-navy sm:text-3xl">{doc.user.name}</h1>
+                <h1 className="text-2xl font-bold text-brand-ink sm:text-3xl">{doc.user.name}</h1>
                 <p className="mt-1 text-primary-600">
                   {doc.specialization} · {doc.department}
                 </p>
@@ -60,7 +60,7 @@ export default function DoctorDetail() {
             <span className="badge text-sm">★ {doc.ratingAverage} average</span>
             <span className="badge-muted">{doc.ratingCount} reviews</span>
             <span className="badge-accent">{doc.experienceYears}+ years experience</span>
-            <span className="rounded-full bg-slate-900 px-4 py-1.5 text-sm font-semibold text-white">
+            <span className="rounded-full bg-primary-500 px-4 py-1.5 text-sm font-semibold text-white">
               ₹{doc.consultationFee} consult
             </span>
           </div>

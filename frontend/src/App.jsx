@@ -1,10 +1,13 @@
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMe } from "./store/slices/authSlice";
+import { fetchMe, markAuthReady } from "./store/slices/authSlice";
 import { fetchNotifications, addNotification } from "./store/slices/notificationSlice";
+import { fetchAppointments } from "./store/slices/appointmentSlice";
 import { getSocket } from "./services/socket";
+import { RequireAuth, GuestOnly } from "./components/AuthGate";
 import Layout from "./components/layout/Layout";
+import AuthLayout from "./components/layout/AuthLayout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -14,96 +17,104 @@ import BookAppointment from "./pages/BookAppointment";
 import PatientDashboard from "./pages/PatientDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import VideoConsult from "./pages/VideoConsult";
 import PaymentPage from "./pages/PaymentPage";
-
-function ProtectedRoute({ children, roles }) {
-  const { user, token } = useSelector((s) => s.auth);
-  if (!token) return <Navigate to="/login" replace />;
-  if (user && roles && !roles.includes(user.role)) {
-    return <Navigate to={`/${user.role}`} replace />;
-  }
-  return children;
-}
 
 export default function App() {
   const dispatch = useDispatch();
-  const { token, user } = useSelector((s) => s.auth);
+  const { user, authReady } = useSelector((s) => s.auth);
+
+  const homeForRole = (role) =>
+    role === "admin" ? "/admin" : role === "doctor" ? "/doctor" : "/home";
 
   useEffect(() => {
-    if (token) dispatch(fetchMe());
-  }, [dispatch, token]);
+    const bootstrap = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await dispatch(fetchMe());
+      } else {
+        dispatch(markAuthReady());
+      }
+    };
+    bootstrap();
+  }, [dispatch]);
 
   useEffect(() => {
     if (!user) return;
     dispatch(fetchNotifications());
     const socket = getSocket();
     if (!socket) return;
-    socket.on("notification", (n) => dispatch(addNotification(n)));
-    socket.on("appointments_updated", () => dispatch(fetchMe()));
+
+    const onNotification = (n) => dispatch(addNotification(n));
+    const onAppointments = () => dispatch(fetchAppointments());
+    const onSlotTiming = (payload) => {
+      dispatch(
+        addNotification({
+          _id: Date.now().toString(),
+          title: "Slot updated",
+          message: payload.message,
+          read: false,
+        })
+      );
+      dispatch(fetchAppointments());
+    };
+
+    socket.on("notification", onNotification);
+    socket.on("appointments_updated", onAppointments);
+    socket.on("slot_timing_updated", onSlotTiming);
+
     return () => {
-      socket.off("notification");
-      socket.off("appointments_updated");
+      socket.off("notification", onNotification);
+      socket.off("appointments_updated", onAppointments);
+      socket.off("slot_timing_updated", onSlotTiming);
     };
   }, [dispatch, user]);
 
+  if (!authReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-50 text-brand-soft">
+        Checking session…
+      </div>
+    );
+  }
+
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={
+          user ? <Navigate to={homeForRole(user.role)} replace /> : <Navigate to="/login" replace />
+        }
+      />
+
+      <Route
+        element={
+          <GuestOnly>
+            <AuthLayout />
+          </GuestOnly>
+        }
+      >
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/doctors" element={<DoctorSearch />} />
-        <Route path="/doctors/:id" element={<DoctorDetail />} />
-        <Route
-          path="/book/:doctorId"
-          element={
-            <ProtectedRoute roles={["patient"]}>
-              <BookAppointment />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient"
-          element={
-            <ProtectedRoute roles={["patient"]}>
-              <PatientDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/doctor"
-          element={
-            <ProtectedRoute roles={["doctor"]}>
-              <DoctorDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute roles={["admin"]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/video/:appointmentId"
-          element={
-            <ProtectedRoute>
-              <VideoConsult />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/payment/:appointmentId"
-          element={
-            <ProtectedRoute>
-              <PaymentPage />
-            </ProtectedRoute>
-          }
-        />
       </Route>
+
+      <Route
+        element={
+          <RequireAuth>
+            <Layout />
+          </RequireAuth>
+        }
+      >
+        <Route path="/home" element={<RequireAuth roles={["patient"]}><Home /></RequireAuth>} />
+        <Route path="/doctors" element={<RequireAuth roles={["patient"]}><DoctorSearch /></RequireAuth>} />
+        <Route path="/doctors/:id" element={<RequireAuth roles={["patient"]}><DoctorDetail /></RequireAuth>} />
+        <Route path="/book/:doctorId" element={<RequireAuth roles={["patient"]}><BookAppointment /></RequireAuth>} />
+        <Route path="/patient" element={<RequireAuth roles={["patient"]}><PatientDashboard /></RequireAuth>} />
+        <Route path="/doctor" element={<RequireAuth roles={["doctor"]}><DoctorDashboard /></RequireAuth>} />
+        <Route path="/admin" element={<RequireAuth roles={["admin"]}><AdminDashboard /></RequireAuth>} />
+        <Route path="/payment/:appointmentId" element={<RequireAuth roles={["patient"]}><PaymentPage /></RequireAuth>} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

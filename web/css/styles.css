@@ -728,8 +728,20 @@ body {
   color: var(--text-muted);
 }
 
-.auth-only-view.guest-blocked {
+.auth-only-view.guest-blocked,
+body.guest-mode .auth-only-view {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.guest-mode .nav-auth {
+  display: none !important;
+}
+
+body.guest-mode #view-login.active,
+body.guest-mode #view-register.active {
+  display: block !important;
 }
 
 .live-badge {

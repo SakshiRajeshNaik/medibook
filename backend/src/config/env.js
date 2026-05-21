@@ -10,6 +10,7 @@ module.exports = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   clientUrl: process.env.CLIENT_URL || "http://localhost:8080",
   slotLockMinutes: parseInt(process.env.SLOT_LOCK_MINUTES || "5", 10),
+  patientsPerSlot: parseInt(process.env.PATIENTS_PER_SLOT || "3", 10),
   consultationFee: parseInt(process.env.CONSULTATION_FEE || "500", 10),
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
@@ -19,5 +20,10 @@ module.exports = {
     user: process.env.SMTP_USER || "",
     pass: process.env.SMTP_PASS || "",
     from: process.env.SMTP_FROM || "MediBook <noreply@medibook.local>",
+  },
+  twilio: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID || "",
+    authToken: process.env.TWILIO_AUTH_TOKEN || "",
+    phoneNumber: process.env.TWILIO_PHONE_NUMBER || "",
   },
 };

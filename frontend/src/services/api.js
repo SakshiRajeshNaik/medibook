@@ -14,8 +14,10 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem("token");
-      if (!window.location.pathname.includes("/login")) {
+      const path = window.location.pathname;
+      const isAuthPage = path === "/login" || path === "/register";
+      if (!isAuthPage) {
+        localStorage.removeItem("token");
         window.location.href = "/login";
       }
     }

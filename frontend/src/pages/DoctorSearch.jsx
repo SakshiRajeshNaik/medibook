@@ -75,7 +75,7 @@ export default function DoctorSearch() {
               <div className="flex items-start gap-4 p-6 pb-0">
                 <Avatar name={doc.user.name} size="md" className="shadow-soft" />
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-lg font-bold text-brand-navy group-hover:text-primary-700">
+                  <h3 className="truncate text-lg font-bold text-brand-ink group-hover:text-primary-700">
                     {doc.user.name}
                   </h3>
                   <p className="mt-0.5 text-sm font-medium text-primary-600">{doc.specialization}</p>
@@ -85,7 +85,7 @@ export default function DoctorSearch() {
               <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-6 py-4">
                 <span className="badge-accent">★ {doc.ratingAverage}</span>
                 <span className="badge-muted">{doc.ratingCount} reviews</span>
-                <span className="ml-auto text-base font-bold text-brand-navy">₹{doc.consultationFee}</span>
+                <span className="ml-auto text-base font-bold text-brand-ink">₹{doc.consultationFee}</span>
               </div>
             </Link>
           ))}
