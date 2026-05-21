@@ -281,7 +281,7 @@ export default function PatientDashboard() {
             {prescriptions.map((p) => (
               <li key={p._id}>
                 <a
-                  href={`/api/prescriptions/${p._id}/pdf?token=${localStorage.getItem("token")}`}
+                  href={`${import.meta.env.VITE_API_URL || "/api"}/prescriptions/${p._id}/pdf?token=${localStorage.getItem("token")}`}
                   className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-800"
                   target="_blank"
                   rel="noreferrer"
