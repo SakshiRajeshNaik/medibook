@@ -30,7 +30,7 @@ export default function AuthLayout() {
         {/* Logo */}
         <div className="relative flex items-center gap-3">
           <LogoMark />
-          <span className="text-2xl font-bold tracking-tight text-white">MediCare</span>
+          <span className="text-2xl font-bold tracking-tight text-white">MediBook</span>
         </div>
 
         {/* Hero text */}
